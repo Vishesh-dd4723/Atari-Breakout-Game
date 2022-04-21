@@ -1,19 +1,26 @@
+from collections import deque
 import gym
 import matplotlib.pyplot as plt
 from IPython import display
+from tensorflow.keras.models import load_model
+from helper_funcs import *
 
+model = load_model('model2')
 env = gym.make('Breakout-v0')
+obss = deque(maxlen=2)
+obs = env.reset()
 
-env.reset()
-img = plt.imshow(env.render(mode='rgb_array')) # only call this once
-score = 0
+for i in range(10):
+    obss.append(image_compressor(obs))
+    action = env.action_space.sample()
+    obs, _, _, _ = env.step(action)
+    obss.append(image_compressor(obs))
+
+img = plt.imshow(env.render(mode='rgb_array'))
 done = False
-i = 0
-while i < 1000 and not done:
-    img.set_data(env.render(mode='rgb_array')) # just update the data
+while not done:
+    img.set_data(env.render(mode='rgb_array'))
     display.display(plt.gcf())
     display.clear_output(wait=True)
-    action = env.action_space.sample()
+    action = np.argmax(model.predict(model_input(obss[0], obss[1], 4)))
     obs, x, done, _ = env.step(action)
-    score += x
-    i += 1
