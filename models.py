@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Activation, AveragePooling2D, Conv2D, MaxPooling2D, Input, Flatten, Dense, BatchNormalization
+from tensorflow.keras.layers import Activation, AveragePooling2D, Conv2D, MaxPooling2D, Dropout, Input, Flatten, Dense, BatchNormalization
 from tensorflow.keras.initializers import random_uniform, glorot_uniform
 from tensorflow.keras.models import Model
 
@@ -8,60 +8,24 @@ class Model1():
     def __init__(self) -> None:
         pass
 
-    def __conv2d_block(self, X, filters, kernel_size, strides, training=True, initializer=glorot_uniform):
-        X = Conv2D(filters, kernel_size, strides, kernel_initializer=initializer(seed=0))(X)
-        X = BatchNormalization(axis=3)(X, training=training)
+    def ann_block(self, X, nodes=1, drop_rate=0):
+        X = Dense(nodes, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
+        X = BatchNormalization()(X)
         X = Activation('relu')(X)
+        X = Dropout(drop_rate)(X)
         return X
-    
-    def model(self, input_shape=(165, 150, 3), classes=4):
+
+    def model(self, input_shape):
         X_input = Input(input_shape)
-        X = self.__conv2d_block(X_input, 5, 3, (1,1))
-        # X = self.__conv2d_block(X, 4,3,(1,1))
-        X = self.__conv2d_block(X, 8,3,(1,1))
-        # X = self.__conv2d_block(X, 8,3,(2,2))
-        X = self.__conv2d_block(X, 16,5,(3,3))
-        X = self.__conv2d_block(X, 16,5,(2,2))
-        X = AveragePooling2D(pool_size=(2,2))(X)
-        X = Flatten()(X)
-        X = Dense(256, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
-        X = Dense(16, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
-        Y = Dense(1, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
 
-        model = Model(inputs=X_input, outputs=Y)
-
-        return model
-
-import tensorflow as tf
-from tensorflow.keras.layers import Activation, AveragePooling2D, Conv2D, MaxPooling2D, Input, Flatten, Dense, BatchNormalization
-from tensorflow.keras.initializers import random_uniform, glorot_uniform
-from tensorflow.keras.models import Model
-
-
-class Model2():
-    def __init__(self) -> None:
-        pass
-
-    def __conv2d_block(self, X, filters, kernel_size, strides, training=True, initializer=glorot_uniform):
-        X = Conv2D(filters, kernel_size, strides, kernel_initializer=initializer(seed=0))(X)
-        X = BatchNormalization(axis=3)(X, training=training)
-        X = Activation('relu')(X)
-        return X
-    
-    def model(self, input_shape=(80, 75, 3), classes=4):
-        X_input = Input(input_shape)
-        X = self.__conv2d_block(X_input, 5, 3, (1,1))
-        # X = self.__conv2d_block(X, 4,3,(1,1))
-        X = self.__conv2d_block(X, 10,3,(1,1))
-        # X = self.__conv2d_block(X, 8,3,(2,2))
-        X = self.__conv2d_block(X, 20,5,(3,3))
-        X = self.__conv2d_block(X, 30,5,(2,2))
-        X = AveragePooling2D(pool_size=(2,2))(X)
-        X = Flatten()(X)
-        X = Dense(256, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
-        X = Dense(64, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
-        X = Dense(8, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
-        Y = Dense(1, activation='relu', kernel_initializer = glorot_uniform(seed=0))(X)
+        X = self.ann_block(X_input, 256, drop_rate=.3)
+        X = self.ann_block(X, 512, drop_rate=.4)
+        X = self.ann_block(X, 1024, drop_rate=.5)
+        X = self.ann_block(X, 256, drop_rate=.4)
+        X = self.ann_block(X, 128, drop_rate=.2)
+        X = self.ann_block(X, 256, drop_rate=.3)
+        X = self.ann_block(X, 32, drop_rate=.1)
+        Y = self.ann_block(X, 1, drop_rate=0)
 
         model = Model(inputs=X_input, outputs=Y)
 
